@@ -25,7 +25,7 @@ def prepare(drivinglog, drivingimages, outputpath, prefix, activity):
         lines.append(line)
     infile.close()
 
-    print 'gathering images', drivingimages
+    print('gathering images', drivingimages)
     images = glob.glob(drivingimages)
     num_images = len(images)
     num_records = len(lines)
@@ -38,8 +38,8 @@ def prepare(drivinglog, drivingimages, outputpath, prefix, activity):
             num_images = num_records
             images = images[:num_images]
 
-    print len(lines), 'steering records'
-    
+    print(len(lines), 'steering records')
+
     logf = h5py.File(outfilename, "w")
     dse = logf.create_dataset("steering_angle", (num_records, ), dtype='float64')
     dse_speed = logf.create_dataset("speed", (num_records, ), dtype='float64')
@@ -52,7 +52,7 @@ def prepare(drivinglog, drivingimages, outputpath, prefix, activity):
         tokens = lines[iLine].split(',')
         iLine += 1
         iRecord += 1
-        
+
         log_activity = tokens[1]
         if activity is not None and activity != log_activity:
             continue;
@@ -63,16 +63,16 @@ def prepare(drivinglog, drivingimages, outputpath, prefix, activity):
         dse_speed[iIter] = np.array([speed])
         iIter += 1
         if iIter % 1000 == 0:
-            print iIter
+            print(iIter)
     if activity is not None:
-        print iIter, 'records found w activity', activity
+        print(iIter, 'records found w activity', activity)
     logf.close()
 
-    print 'done with log'
+    print('done with log')
 
     outfilename = os.path.join(outputpath, "camera", basename)
     camf = h5py.File(outfilename, "w")
-    print num_images, 'images'
+    print(num_images, 'images')
     ch, rows, col = camera_format.get_camera_image_dim()
     dse = camf.create_dataset("X", (num_images, ch, rows, col), dtype='uint8')
     images.sort()
@@ -92,20 +92,20 @@ def prepare(drivinglog, drivingimages, outputpath, prefix, activity):
             img_filename = imgs_by_id[id]
             im = Image.open(img_filename).convert('RGB')
             if im.width != col or im.height != rows:
-                print 'Aborting! image:', img_filename, 'had the wrong dimension:', im.width, im.height, 'expecting', col, rows
+                print('Aborting! image:', img_filename, 'had the wrong dimension:', im.width, im.height, 'expecting', col, rows)
                 #stopping because we are likely to see many of these..
-                return           
+                return
             imarr = np.array(im).transpose()
             dse[iIter] = imarr
         except KeyError:
-            print 'no image for frame', id
+            print('no image for frame', id)
         iIter = iIter + 1
         if iIter % 1000 == 0:
-            print iIter
+            print(iIter)
     camf.close()
-    print 'done with images'
+    print('done with images')
     if activity is not None:
-        print iIter, 'images found w activity', activity
+        print(iIter, 'images found w activity', activity)
 
 def clean(controls_filename, images_filemask):
     os.unlink(controls_filename)
@@ -126,25 +126,25 @@ if __name__ == "__main__":
     parser.add_argument('--validation', dest='validation', action='store_true', help='sets prefix for validation.')
     parser.add_argument('--clean', action='store_true', help='should we remove images and logs')
     parser.add_argument('--activity', dest='activity', default=None, help='activity prefix.')
-    
+
     args, more = parser.parse_known_args()
 
-    print "Argument summary:"
-    print "activity:", args.activity
-    print "images:", args.images
+    print("Argument summary:")
+    print("activity:", args.activity)
+    print("images:", args.images)
 
     controls_filename = os.path.join(args.log_path, args.log_controls)
     images_filemask = os.path.join(args.log_path, args.images)
 
-    print 'controls:', controls_filename
+    print('controls:', controls_filename)
 
     if args.validation:
         prefix = 'val_'
     else:
         prefix = args.prefix
 
-    print "prefix:", prefix
-    print
+    print("prefix:", prefix)
+    print("")
 
     prepare(controls_filename, images_filemask, args.out_path, prefix, args.activity)
 
